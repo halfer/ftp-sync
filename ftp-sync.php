@@ -57,11 +57,12 @@ class FtpSync
         $remoteIndex = $this->getRemoteIndex($handle, $remoteDirectory);
         $fileList = $this->indexDifferencer($remoteIndex, $localIndex);
 
+        $this->changeRemoteDir($handle, $remoteDirectory);
+
         // Now copy a chunk of files
         $this->copyFiles(
             $handle,
             $fileList,
-            $remoteDirectory,
             $localDirectory,
             20
         );
@@ -70,16 +71,32 @@ class FtpSync
     /**
      * The differencer relies on the binary mode. But we could use timestamps instead in the
      * unlikely event of needing to cater for Windows servers, where binary mode might not
-     * work so well (due to differences in line end encodings.
+     * work so well (due to differences in line end encodings).
      */
     protected function copyFiles(
         $handle,
         array $fileList,
-        string $remoteDirectory,
         string $localDirectory,
         int $copyLimit): void
     {
-        // FIXME
+        // @todo This needs to be in a loop
+        $ok = ftp_get(
+            $handle,
+            $localDirectory . '/' . $fileList[0],
+            $fileList[0],
+            FTP_BINARY
+        );
+        if ($ok) {
+            echo "Copy {$fileList[0]} OK\n";
+        }
+    }
+
+    protected function changeRemoteDir($handle, string $remoteDirectory): void
+    {
+        $ok = ftp_chdir($handle, $remoteDirectory);
+        if (!$ok) {
+            $this->errorAndExit('Could not change remote directory');
+        }
     }
 
     /**
