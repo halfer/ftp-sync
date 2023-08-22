@@ -80,14 +80,19 @@ class FtpSync
         int $copyLimit): void
     {
         // @todo This needs to be in a loop
+        $this->copyFile($handle, $localDirectory, $fileList[0]);
+    }
+
+    protected function copyFile($handle, string $localDirectory, string $file): void
+    {
         $ok = ftp_get(
             $handle,
-            $localDirectory . '/' . $fileList[0],
-            $fileList[0],
+            $localDirectory . '/' . $file,
+            $file,
             FTP_BINARY
         );
         if ($ok) {
-            echo "Copy {$fileList[0]} OK\n";
+            echo "Copy {$file} OK\n";
         }
     }
 
