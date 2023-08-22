@@ -64,7 +64,7 @@ class FtpSync
             $handle,
             $fileList,
             $localDirectory,
-            20
+            10
         );
     }
 
@@ -79,8 +79,12 @@ class FtpSync
         string $localDirectory,
         int $copyLimit): void
     {
-        // @todo This needs to be in a loop
-        $this->copyFile($handle, $localDirectory, $fileList[0]);
+        foreach (array_values($fileList) as $ord => $file) {
+            if ($ord >= $copyLimit) {
+                break;
+            }
+            $this->copyFile($handle, $localDirectory, $file);
+        }
     }
 
     protected function copyFile($handle, string $localDirectory, string $file): void
