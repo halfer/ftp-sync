@@ -104,10 +104,34 @@ class FtpSync
         return $localIndex;
     }
 
+    /**
+     * @todo Inject the wildcard from config
+     */
     protected function getRemoteIndex($handle, string $directory): array
     {
-        // FIXME Currently untested - do I need to parse this? Are file sizes included?
-        return ftp_rawlist($handle, $directory);
+        $fileList = ftp_mlsd($handle, $directory);
+        $remoteIndex = [];
+
+        // Loop through files and get leaf-names and file sizes
+        foreach ($fileList as $file) {
+            // Ignore anything that is not a file
+            if ($file['type'] !== 'file') {
+                continue;
+            }
+
+            // Ignore anything that does not match the log file pattern
+            $matchesPattern = preg_match('#\.log$#', $file['name']);
+            if (!$matchesPattern) {
+                continue;
+            }
+
+            $remoteIndex[] = [
+                'name' => $file['name'],
+                'size' => $file['size'],
+            ];
+        }
+
+        return $remoteIndex;
     }
 
     protected function makeConnection(array $config)
