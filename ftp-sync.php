@@ -90,7 +90,18 @@ class FtpSync
      */
     protected function getLocalIndex(string $directory): array
     {
-        return glob($directory . '/*.log');
+        $fileList = glob($directory . '/*.log');
+        $localIndex = [];
+
+        // Loop through files and get leaf-names and file sizes
+        foreach ($fileList as $file) {
+            $localIndex[] = [
+                'name' => basename($file),
+                'size' => filesize($file),
+            ];
+        }
+
+        return $localIndex;
     }
 
     protected function getRemoteIndex($handle, string $directory): array
