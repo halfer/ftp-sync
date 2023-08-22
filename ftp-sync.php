@@ -15,8 +15,8 @@ $ftpSync->run();
 
 class FtpSync
 {
-    protected string $projectRoot;
-    protected array $pathNames = [];
+    protected $projectRoot;
+    protected $pathNames = [];
 
     public function __construct(string $projectRoot, array $pathNames)
     {
@@ -46,6 +46,9 @@ class FtpSync
 
         // Connect to the FTP server
         $handle = $this->makeConnection($config);
+
+        // @todo Set passive mode
+        // @todo Set binary mode
 
         // Generate the file indexes on both sides
         $localIndex = $this->getLocalIndex($localDirectory);
@@ -200,7 +203,7 @@ class FtpSync
 
     protected function errorAndExit(string $message): void
     {
-        echo "Fatal error: $message";
+        echo "Fatal error: $message\n";
         exit(1);
     }
 }
