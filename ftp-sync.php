@@ -189,6 +189,9 @@ class FtpSync
         return $handle;
     }
 
+    /**
+     * @todo Passive mode should probably be a config option
+     */
     protected function setFtpOptions($handle): void
     {
         $ok = ftp_pasv($handle, true);
