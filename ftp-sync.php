@@ -17,8 +17,15 @@ foreach (glob($projectRoot . '/src/*.php') as $classFile) {
     require_once $classFile;
 }
 
+// If we are in web mode, permit a dryrun parameter to be supplied
+$options = [];
+if (isset($_GET) && isset($_GET['dryrun'])) {
+    $options['dryrun'] = true;
+}
+
 $ftpSync = new FtpSync(
     $projectRoot,
-    ['config' => 'config.php', ]
+    ['config' => 'config.php', ],
+    $options
 );
 $ftpSync->run();

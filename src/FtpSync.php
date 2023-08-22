@@ -6,11 +6,13 @@ class FtpSync
 {
     protected $projectRoot;
     protected $pathNames = [];
+    protected $options = [];
 
-    public function __construct(string $projectRoot, array $pathNames)
+    public function __construct(string $projectRoot, array $pathNames, array $options = [])
     {
         $this->projectRoot = $projectRoot;
         $this->pathNames = $pathNames;
+        $this->options = $options;
     }
 
     public function run(): void
@@ -67,15 +69,19 @@ class FtpSync
 
     protected function copyFile($handle, string $localDirectory, string $file): void
     {
+        if ($this->isDryRunMode()) {
+            $this->stdOut("Would copy {$file} (dry run)");
+            return;
+        }
+
         $ok = ftp_get(
             $handle,
             $localDirectory . '/' . $file,
             $file,
             FTP_BINARY
         );
-        // @todo Use a function or a dependency to do console/web output
         if ($ok) {
-            echo "Copy {$file} OK\n";
+            $this->stdOut("Copy {$file} OK");
         }
     }
 
@@ -211,6 +217,11 @@ class FtpSync
         }
     }
 
+    protected function isDryRunMode(): bool
+    {
+        return isset($this->options['dryrun']) && $this->options['dryrun'];
+    }
+
     protected function getFtpHostName(array $config): string
     {
         return $this->getConfigKey($config, 'hostname');
@@ -269,6 +280,14 @@ class FtpSync
         }
 
         return $this->pathNames[$name];
+    }
+
+    /**
+     * @todo This would be best calling a mockable dependency
+     */
+    protected function stdOut(string $message): void
+    {
+        echo "$message\n";
     }
 
     protected function errorAndExit(string $message): void
