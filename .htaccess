@@ -1,0 +1,5 @@
+# Optional set of Apache rules for when the script is installed in a web-accessible folder.
+# This prevents web access to anything but the script itself.
+
+RewriteEngine On
+RewriteRule !^ftp-sync\.php - [R=404]
