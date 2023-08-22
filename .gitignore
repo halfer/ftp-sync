@@ -3,3 +3,6 @@
 
 # Don't commit actual config
 /config.php
+
+# Don't commit my current deploy script
+/bin/deploy-script.sh
