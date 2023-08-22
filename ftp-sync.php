@@ -46,9 +46,7 @@ class FtpSync
 
         // Connect to the FTP server
         $handle = $this->makeConnection($config);
-
-        // @todo Set passive mode
-        // @todo Set binary mode
+        $this->setFtpOptions($handle);
 
         // Generate the file indexes on both sides
         $localIndex = $this->getLocalIndex($localDirectory);
@@ -66,6 +64,11 @@ class FtpSync
         );
     }
 
+    /**
+     * The differencer relies on the binary mode. But we could use timestamps instead in the
+     * unlikely event of needing to cater for Windows servers, where binary mode might not
+     * work so well (due to differences in line end encodings.
+     */
     protected function copyFiles(
         $handle,
         array $fileList,
@@ -109,6 +112,14 @@ class FtpSync
         }
 
         return $handle;
+    }
+
+    protected function setFtpOptions($handle): void
+    {
+        $ok = ftp_pasv($handle, true);
+        if (!$ok) {
+            $this->errorAndExit('Could not switch to passive mode');
+        }
     }
 
     protected function ensureLocalTargetDirectoryIsWriteable(string $directory): void
