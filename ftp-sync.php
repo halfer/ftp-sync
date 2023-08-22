@@ -151,7 +151,8 @@ class FtpSync
                 continue;
             }
 
-            $remoteIndex[$file['name']] = $file['size'];
+            // For some reason the FTP func returns the size as a string
+            $remoteIndex[$file['name']] = (int) $file['size'];
         }
 
         return $remoteIndex;
