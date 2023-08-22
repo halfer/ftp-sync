@@ -12,7 +12,7 @@
 $projectRoot = realpath('.');
 $ftpSync = new FtpSync(
     $projectRoot,
-    ['config' => 'config.php', 'statefile' => 'statefile.php', ]
+    ['config' => 'config.php', ]
 );
 $ftpSync->run();
 
@@ -31,17 +31,6 @@ class FtpSync
     {
         // Fetch the config
         $config = $this->getConfig($this->getConfigPath());
-
-        /**
-         * The original plan was to use a "statefile" to record what had been copied, but since
-         * we can generate an index on both sides, I am now not sure that I see the point of this.
-         * If the indexing locally & remotely works, I think I will get rid of the statefile
-         * stuff.
-         */
-
-        // See if the statefile is happy
-        #$this->createStateFileIfNecessary($this->getStateFilePath());
-        #$this->ensureStateFileIsWriteable($this->getStateFilePath());
 
         // Ensure we can write to the sync target directory
         $localDirectory = $this->getLocalDirectory($config);
@@ -215,25 +204,6 @@ class FtpSync
         }
     }
 
-    protected function ensureStateFileIsWriteable(string $stateFilePath): void
-    {
-        if (!is_writeable($stateFilePath)) {
-            $this->errorAndExit('Cannot write to the local statefile');
-        }
-    }
-
-    protected function createStateFileIfNecessary(string $stateFilePath): void
-    {
-        if (!file_exists($stateFilePath)) {
-            $this->writeStateFile($stateFilePath, []);
-        }
-    }
-
-    protected function writeStateFile(string $stateFilePath, array $state): void
-    {
-        file_put_contents($stateFilePath, json_encode($state));
-    }
-
     protected function getFtpHostName(array $config): string
     {
         return $this->getConfigKey($config, 'hostname');
@@ -276,11 +246,6 @@ class FtpSync
         $json = file_get_contents($configPath);
 
         return json_decode($json, true);
-    }
-
-    protected function getStateFilePath(): string
-    {
-        return $this->projectRoot . '/' . $this->getConfigName('statefile');
     }
 
     protected function getConfigPath(): string
