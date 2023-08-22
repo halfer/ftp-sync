@@ -6,17 +6,20 @@ class FtpSync
 {
     /* @var File $file */
     protected $file;
+    /* @var Ftp $ftp */
+    protected $ftp;
     /* @var string $projectRoot */
     protected $projectRoot;
     protected $pathNames = [];
     protected $options = [];
 
     public function __construct(
-        File $file, string $projectRoot,
+        File $file, Ftp $ftp, string $projectRoot,
         array $pathNames, array $options = []
     )
     {
         $this->file = $file;
+        $this->ftp = $ftp;
         $this->projectRoot = $projectRoot;
         $this->pathNames = $pathNames;
         $this->options = $options;
@@ -33,26 +36,25 @@ class FtpSync
         $this->ensureLocalTargetDirectoryIsWriteable($localDirectory);
 
         // Connect to the FTP server
-        $handle = $this->makeConnection($config);
-        $this->setFtpOptions($handle);
+        $ok = $this->makeConnection($config);
+        $this->setFtpOptions();
 
         // Generate the file indexes on both sides
         $localIndex = $this->getLocalIndex($localDirectory);
         $remoteDirectory = $this->getRemoteDirectory($config);
-        $remoteIndex = $this->getRemoteIndex($handle, $remoteDirectory);
+        $remoteIndex = $this->getRemoteIndex($remoteDirectory);
         $fileList = $this->indexDifferencer($remoteIndex, $localIndex);
 
-        $this->changeRemoteDir($handle, $remoteDirectory);
+        $this->changeRemoteDir($remoteDirectory);
 
         // Now copy a chunk of files
         $this->copyFiles(
-            $handle,
             $fileList,
             $localDirectory,
             10
         );
 
-        $this->ftpClose($handle);
+        $this->ftpClose();
     }
 
     /**
@@ -61,7 +63,6 @@ class FtpSync
      * work so well (due to differences in line end encodings).
      */
     protected function copyFiles(
-        $handle,
         array $fileList,
         string $localDirectory,
         int $copyLimit): void
@@ -70,19 +71,18 @@ class FtpSync
             if ($ord >= $copyLimit) {
                 break;
             }
-            $this->copyFile($handle, $localDirectory, $file);
+            $this->copyFile($localDirectory, $file);
         }
     }
 
-    protected function copyFile($handle, string $localDirectory, string $file): void
+    protected function copyFile(string $localDirectory, string $file): void
     {
         if ($this->isDryRunMode()) {
             $this->stdOut("Would copy {$file} (dry run)");
             return;
         }
 
-        $ok = ftp_get(
-            $handle,
+        $ok = $this->getFtp()->get(
             $localDirectory . '/' . $file,
             $file,
             FTP_BINARY
@@ -92,9 +92,9 @@ class FtpSync
         }
     }
 
-    protected function changeRemoteDir($handle, string $remoteDirectory): void
+    protected function changeRemoteDir(string $remoteDirectory): void
     {
-        $ok = ftp_chdir($handle, $remoteDirectory);
+        $ok = $this->getFtp()->chdir($remoteDirectory);
         if (!$ok) {
             $this->errorAndExit('Could not change remote directory');
         }
@@ -151,9 +151,9 @@ class FtpSync
     /**
      * @todo Inject the wildcard from config
      */
-    protected function getRemoteIndex($handle, string $directory): array
+    protected function getRemoteIndex(string $directory): array
     {
-        $fileList = ftp_mlsd($handle, $directory);
+        $fileList = $this->getFtp()->mlsd($directory);
         $remoteIndex = [];
 
         // Loop through files and get leaf-names and file sizes
@@ -176,36 +176,36 @@ class FtpSync
         return $remoteIndex;
     }
 
-    protected function makeConnection(array $config)
+    protected function makeConnection(array $config): bool
     {
-        $handle = ftp_connect($this->getFtpHostName($config), 21, 20);
-        if (!$handle) {
+        $ok = $this->getFtp()->connect($this->getFtpHostName($config), 21, 20);
+        if (!$ok) {
             $this->errorAndExit('Could not connect to FTP server');
         }
 
-        $ok = ftp_login($handle, $this->getFtpUserName($config), $this->getFtpPassword($config));
+        $ok = $this->getFtp()->login($this->getFtpUserName($config), $this->getFtpPassword($config));
         if (!$ok) {
             $this->errorAndExit('Could not authenticate to FTP server');
         }
 
-        return $handle;
+        return $ok;
     }
 
     /**
      * @todo Passive mode should probably be a config option
      */
-    protected function setFtpOptions($handle): void
+    protected function setFtpOptions(): void
     {
-        $ok = ftp_pasv($handle, true);
+        $ok = $this->getFtp()->pasv(true);
         if (!$ok) {
             $this->errorAndExit('Could not switch to passive mode');
         }
     }
 
-    protected function ftpClose($handle): void
+    protected function ftpClose(): void
     {
         // Fail silently if it did not work
-        @ftp_close($handle);
+        @$this->getFtp()->close();
     }
 
     protected function ensureLocalTargetDirectoryIsWriteable(string $directory): void
@@ -300,6 +300,14 @@ class FtpSync
     protected function getFile(): File
     {
         return $this->file;
+    }
+
+    /**
+     * Gets the (mockable) object wrapper for FTP ops
+     */
+    protected function getFtp(): Ftp
+    {
+        return $this->ftp;
     }
 
     /**

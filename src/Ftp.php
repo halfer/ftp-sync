@@ -14,53 +14,48 @@ namespace FtpSync;
 class Ftp
 {
     protected $handle;
-    protected $fileFilter;
 
     public function __construct()
     {
     }
 
-    public function connect(string $hostname, int $port, int $timeout): void
+    public function connect(string $hostname, int $port, int $timeout): bool
     {
-        // FIXME
+        $handle = ftp_connect($hostname, $port, $timeout);
+        if ($handle) {
+            $this->handle = $handle;
+        }
+
+        return (bool) $handle;
     }
 
-    public function login(string $username, string $password): void
+    public function login(string $username, string $password): bool
     {
-        // FIXME
+        return ftp_login($this->handle, $username, $password);
     }
 
-    public function pasv(bool $enable): void
+    public function pasv(bool $enable): bool
     {
-        // FIXME
+        return ftp_pasv($this->handle, $enable);
     }
 
-    public function chDir(string $directory): void
+    public function chdir(string $directory): bool
     {
-        // FIXME
+        return ftp_chdir($this->handle, $directory);
     }
 
     public function mlsd(string $directory): array
     {
-        return []; // FIXME
+        return ftp_mlsd($this->handle, $directory);
     }
 
-    /**
-     * This acts as a cheeky extension to mlsd() - files have to match the regexp pattern
-     * in order to be included in the list.
-     */
-    public function setFileFilter(string $fileFilter): void
+    public function get(string $localFilename, string $remoteFilename, int $mode = FTP_BINARY): bool
     {
-        $this->fileFilter = $fileFilter;
-    }
-
-    public function get(string $localFilename, string $remoteFilename, int $mode = FTP_BINARY): string
-    {
-        return ''; // FIXME
+        return ftp_get($this->handle, $localFilename, $remoteFilename, $mode);
     }
 
     public function close(): void
     {
-        // FIXME
+        ftp_close($this->handle);
     }
 }
