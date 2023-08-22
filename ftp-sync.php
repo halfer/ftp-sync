@@ -34,7 +34,7 @@ class FtpSync
 
         // Ensure we can write to the sync target directory
         $localDirectory = $this->getLocalDirectory($config);
-        // FIXME check the local target exists
+        $this->ensureLocalTargetDirectoryExists($localDirectory);
         $this->ensureLocalTargetDirectoryIsWriteable($localDirectory);
 
         // Connect to the FTP server
@@ -202,6 +202,14 @@ class FtpSync
         if (!is_writeable($directory))
         {
             $this->errorAndExit('Cannot write to the local sync folder');
+        }
+    }
+
+    protected function ensureLocalTargetDirectoryExists(string $directory): void
+    {
+        if (!is_dir($directory))
+        {
+            $this->errorAndExit('The local sync folder cannot be found');
         }
     }
 
