@@ -1,0 +1,5 @@
+# Ignore IDE
+/.idea
+
+# Don't commit actual config
+/config.php
