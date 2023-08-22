@@ -95,6 +95,7 @@ A few things that would be good to add:
 * Configurable file filters (presently this is hardwired to `*.log`)
 * Useful verbose output (it is only noisy in error conditions presently)
 * A "dry run" mode on the console (there is a simple web one already)
+* Disable script action over the web by default (needs a config option to enable)
 * Local-side file deletion (for where a source file is removed)
 * Automated tests
 * Some notes on using this tool securely
