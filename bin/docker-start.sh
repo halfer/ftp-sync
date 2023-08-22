@@ -2,5 +2,5 @@
 
 docker run \
   -v `pwd`:/project -it \
-  php:8.2-cli-alpine \
+  php:7.3-cli-alpine \
   sh
