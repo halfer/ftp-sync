@@ -56,6 +56,8 @@ class FtpSync
             $localDirectory,
             10
         );
+
+        $this->ftpClose($handle);
     }
 
     /**
@@ -85,6 +87,7 @@ class FtpSync
             $file,
             FTP_BINARY
         );
+        // @todo Use a function or a dependency to do console/web output
         if ($ok) {
             echo "Copy {$file} OK\n";
         }
@@ -198,6 +201,12 @@ class FtpSync
         if (!$ok) {
             $this->errorAndExit('Could not switch to passive mode');
         }
+    }
+
+    protected function ftpClose($handle): void
+    {
+        // Fail silently if it did not work
+        @ftp_close($handle);
     }
 
     protected function ensureLocalTargetDirectoryIsWriteable(string $directory): void
