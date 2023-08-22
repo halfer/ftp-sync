@@ -4,6 +4,9 @@
  * This script is a "poor person's sync" system to copy files from one server to another. It uses FTP
  * and builds a list of files on both sides, so that only changed files are copied. Normally we
  * would use SSH/Rsync for this, but this is useful where such systems are not available.
+ *
+ * There is currently no local delete where a remote file has been removed, but I don't think
+ * we will need that.
  */
 
 $projectRoot = realpath('.');
@@ -52,7 +55,7 @@ class FtpSync
         $localIndex = $this->getLocalIndex($localDirectory);
         $remoteDirectory = $this->getRemoteDirectory($config);
         $remoteIndex = $this->getRemoteIndex($handle, $remoteDirectory);
-        $fileList = $this->indexDifferencer($localIndex, $remoteIndex);
+        $fileList = $this->indexDifferencer($remoteIndex, $localIndex);
 
         // Now copy a chunk of files
         $this->copyFiles(
@@ -79,10 +82,36 @@ class FtpSync
         // FIXME
     }
 
-    protected function indexDifferencer(array $localIndex, array $remoteIndex): array
+    /**
+     * Decides which files from the remote to copy
+     *
+     * The format of each array is:
+     *
+     * [ filename1 => size1, filename2 => size2, ... ]
+     */
+    protected function indexDifferencer(array $remoteIndex, array $localIndex): array
     {
-        // FIXME this is completely untested
-        return array_diff($localIndex, $remoteIndex);
+        $differences = [];
+        foreach ($remoteIndex as $name => $remoteSize) {
+            $copy = false;
+
+            // See if we this file in the local index
+            if (isset($localIndex[$name])) {
+                if ($localIndex[$name] !== $remoteSize) {
+                    // Copy if the file sizes are different
+                    $copy = true;
+                }
+            } else {
+                // Copy if we don't have the file in local at all
+                $copy = true;
+            }
+
+            if ($copy) {
+                $differences[] = $name;
+            }
+        }
+
+        return $differences;
     }
 
     /**
@@ -95,10 +124,7 @@ class FtpSync
 
         // Loop through files and get leaf-names and file sizes
         foreach ($fileList as $file) {
-            $localIndex[] = [
-                'name' => basename($file),
-                'size' => filesize($file),
-            ];
+            $localIndex[basename($file)] = filesize($file);
         }
 
         return $localIndex;
@@ -125,10 +151,7 @@ class FtpSync
                 continue;
             }
 
-            $remoteIndex[] = [
-                'name' => $file['name'],
-                'size' => $file['size'],
-            ];
+            $remoteIndex[$file['name']] = $file['size'];
         }
 
         return $remoteIndex;
