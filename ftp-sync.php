@@ -15,8 +15,13 @@ $ftpSync->run();
 
 class FtpSync
 {
-    public function __construct(protected string $projectRoot, protected array $pathNames)
+    protected string $projectRoot;
+    protected array $pathNames = [];
+
+    public function __construct(string $projectRoot, array $pathNames)
     {
+        $this->projectRoot = $projectRoot;
+        $this->pathNames = $pathNames;
     }
 
     public function run(): void
