@@ -34,6 +34,7 @@ class FtpSync
 
         // Ensure we can write to the sync target directory
         $localDirectory = $this->getLocalDirectory($config);
+        // FIXME check the local target exists
         $this->ensureLocalTargetDirectoryIsWriteable($localDirectory);
 
         // Connect to the FTP server
@@ -238,14 +239,16 @@ class FtpSync
         return $config[$key];
     }
 
+    /**
+     * The config file is a PHP script that returns an associative array
+     */
     protected function getConfig(string $configPath): array
     {
         if (!file_exists($configPath)) {
             $this->errorAndExit('Cannot find config file');
         }
-        $json = file_get_contents($configPath);
 
-        return json_decode($json, true);
+        return require($configPath);
     }
 
     protected function getConfigPath(): string

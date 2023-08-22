@@ -1,7 +1,9 @@
-{
-  "remote_directory": "",
-  "local_directory": "",
-  "hostname": "",
-  "username": "",
-  "password": ""
-}
+<?php
+
+return [
+  "remote_directory" => "",
+  "local_directory" => "",
+  "hostname" => "",
+  "username" => "",
+  "password" => ""
+];
