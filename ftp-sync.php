@@ -10,6 +10,7 @@
  */
 
 use FtpSync\FtpSync;
+use FtpSync\File;
 
 // Load dependencies (avoiding Composer for now)
 $projectRoot = realpath('.');
@@ -27,6 +28,7 @@ if (isset($_GET)) {
 }
 
 $ftpSync = new FtpSync(
+    new File(),
     $projectRoot,
     ['config' => 'config.php', ],
     $options

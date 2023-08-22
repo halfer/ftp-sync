@@ -4,12 +4,19 @@ namespace FtpSync;
 
 class FtpSync
 {
+    /* @var File $file */
+    protected $file;
+    /* @var string $projectRoot */
     protected $projectRoot;
     protected $pathNames = [];
     protected $options = [];
 
-    public function __construct(string $projectRoot, array $pathNames, array $options = [])
+    public function __construct(
+        File $file, string $projectRoot,
+        array $pathNames, array $options = []
+    )
     {
+        $this->file = $file;
         $this->projectRoot = $projectRoot;
         $this->pathNames = $pathNames;
         $this->options = $options;
@@ -130,12 +137,12 @@ class FtpSync
      */
     protected function getLocalIndex(string $directory): array
     {
-        $fileList = glob($directory . '/*.log');
+        $fileList = $this->getFile()->glob($directory . '/*.log');
         $localIndex = [];
 
         // Loop through files and get leaf-names and file sizes
         foreach ($fileList as $file) {
-            $localIndex[basename($file)] = filesize($file);
+            $localIndex[basename($file)] = $this->getFile()->filesize($file);
         }
 
         return $localIndex;
@@ -203,7 +210,7 @@ class FtpSync
 
     protected function ensureLocalTargetDirectoryIsWriteable(string $directory): void
     {
-        if (!is_writeable($directory))
+        if (!$this->getFile()->isWriteable($directory))
         {
             $this->errorAndExit('Cannot write to the local sync folder');
         }
@@ -211,7 +218,7 @@ class FtpSync
 
     protected function ensureLocalTargetDirectoryExists(string $directory): void
     {
-        if (!is_dir($directory))
+        if (!$this->getFile()->isDir($directory))
         {
             $this->errorAndExit('The local sync folder cannot be found');
         }
@@ -266,11 +273,11 @@ class FtpSync
      */
     protected function getConfig(string $configPath): array
     {
-        if (!file_exists($configPath)) {
+        if (!$this->getFile()->fileExists($configPath)) {
             $this->errorAndExit('Cannot find config file');
         }
 
-        return require($configPath);
+        return $this->getFile()->require($configPath);
     }
 
     protected function getConfigPath(): string
@@ -285,6 +292,14 @@ class FtpSync
         }
 
         return $this->pathNames[$name];
+    }
+
+    /**
+     * Gets the (mockable) object wrapper for file ops
+     */
+    protected function getFile(): File
+    {
+        return $this->file;
     }
 
     /**
