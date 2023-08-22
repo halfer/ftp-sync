@@ -6,3 +6,7 @@
 
 # Don't commit my current deploy script
 /bin/deploy-script.sh
+
+# Ignore deps folder
+/vendor/
+
