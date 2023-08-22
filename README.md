@@ -38,11 +38,27 @@ Installation is fairly straightforward:
 
 1. Copy the `ftp-sync.php` script to your preferred remote server location (either in your web root or
 outside your web root, depending on how you wish to call it)
-2. Copy the `config.php.example` file locally as `config.php` and fill in the details of your remote host
-3. The config value `local_directory` should point to a writeable folder on the same machine as the script -
+2. Copy the `src` folder (and its contents) to the same folder as the PHP script
+3. Copy the `config.php.example` file locally as `config.php` and fill in the details of your remote host
+4. The config value `local_directory` should point to a writeable folder on the same machine as the script -
 the remote files will be copied here
-4. The config value `remote_directory` will be used in FTP commands to find the remote folder to pull files from
-5. Add a line in your Cron to call the script
+5. The config value `remote_directory` will be used in FTP commands to find the remote folder to pull files from
+6. Add a line in your Cron to call the script
+
+Calling the script
+---
+
+In general, you will want to call this using a scheduler. You can call it as a console script or via the web.
+For example, let's say you have a web root of `/home/jonesy`. In this folder you could create a sub-folder
+of `log-sync`, and then you'd need to install the FtpSync project into this folder.
+
+The console command to invoke the script would be:
+
+    php /home/jonesy/log-sync/ftp-sync.php
+
+Or if you wish, you can call it using curl/wget (substituting your domain name and sub-path as necessary):
+
+    curl https://example.com/log-sync/ftp-sync.php
 
 Limitations
 --
@@ -77,7 +93,7 @@ A few things that would be good to add:
 * An ability to specify an FTP timeout
 * Configurable file filters (presently this is hardwired to `*.log`)
 * Useful verbose output (it is only noisy in error conditions presently)
-* A "dry run" mode
+* A "dry run" mode on the console (there is a simple web one already)
 * Local-side file deletion (for where a source file is removed)
 * Automated tests
 * Some notes on using this tool securely
