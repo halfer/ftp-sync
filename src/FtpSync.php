@@ -222,6 +222,11 @@ class FtpSync
         return isset($this->options['dryrun']) && $this->options['dryrun'];
     }
 
+    protected function isWebMode(): bool
+    {
+        return isset($this->options['web']) && $this->options['web'];
+    }
+
     protected function getFtpHostName(array $config): string
     {
         return $this->getConfigKey($config, 'hostname');
@@ -287,7 +292,9 @@ class FtpSync
      */
     protected function stdOut(string $message): void
     {
-        echo "$message\n";
+        echo $message;
+        echo $this->isWebMode() ? '<br>' : '';
+        echo "\n";
     }
 
     protected function errorAndExit(string $message): void
