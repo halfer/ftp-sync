@@ -12,9 +12,10 @@
 use FtpSync\FtpSync;
 use FtpSync\File;
 use FtpSync\Ftp;
+use FtpSync\Output;
 
 // Load dependencies (avoiding Composer for now)
-$projectRoot = realpath('.');
+$projectRoot = realpath(__DIR__);
 foreach (glob($projectRoot . '/src/*.php') as $classFile) {
     require_once $classFile;
 }
@@ -31,6 +32,7 @@ if (isset($_GET)) {
 $ftpSync = new FtpSync(
     new File(),
     new Ftp(),
+    new Output(),
     $projectRoot,
     ['config' => 'config.php', ],
     $options

@@ -8,18 +8,21 @@ class FtpSync
     protected $file;
     /* @var Ftp $ftp */
     protected $ftp;
+    /* @var Output $output */
+    protected $output;
     /* @var string $projectRoot */
     protected $projectRoot;
     protected $pathNames = [];
     protected $options = [];
 
     public function __construct(
-        File $file, Ftp $ftp, string $projectRoot,
-        array $pathNames, array $options = []
+        File $file, Ftp $ftp, Output $output,
+        string $projectRoot, array $pathNames, array $options = []
     )
     {
         $this->file = $file;
         $this->ftp = $ftp;
+        $this->output = $output;
         $this->projectRoot = $projectRoot;
         $this->pathNames = $pathNames;
         $this->options = $options;
@@ -310,19 +313,20 @@ class FtpSync
         return $this->ftp;
     }
 
-    /**
-     * @todo This would be best calling a mockable dependency
-     */
     protected function stdOut(string $message): void
     {
-        echo $message;
-        echo $this->isWebMode() ? '<br>' : '';
-        echo "\n";
+        $this->output->println(
+            $message .
+            ($this->isWebMode() ? '<br>' : '')
+        );
     }
 
+    /**
+     * @todo The non-zero exit code should only be for console usage
+     */
     protected function errorAndExit(string $message): void
     {
-        echo "Fatal error: $message\n";
+        $this->output->println("Fatal error: $message");
         exit(1);
     }
 }
