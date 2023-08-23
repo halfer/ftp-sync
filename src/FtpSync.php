@@ -322,6 +322,7 @@ class FtpSync
     }
 
     /**
+     * @todo Have an exit flag in the output dependency, so this is testable
      * @todo The non-zero exit code should only be for console usage
      */
     protected function errorAndExit(string $message): void

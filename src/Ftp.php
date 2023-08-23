@@ -3,13 +3,10 @@
 namespace FtpSync;
 
 /**
- * At the time of writing this is unused, but it would be useful to inject FTP functionality
- * into the app in a way that makes the main script unit-testable.
+ * A dependency wrapper around the FTP functions that makes the main class unit-testable.
  *
  * Most of the public methods in this class roughly follow the FTP functions, though where
- * a handle parameter is required, that is stored in a class property instead. Also, the
- * functions here will throw an exception if they were unsuccessful, and thus a boolean
- * return value for success is not required.
+ * a handle parameter is required, that is stored in a class property instead.
  */
 class Ftp
 {
