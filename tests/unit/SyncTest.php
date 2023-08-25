@@ -37,10 +37,51 @@ class SyncTest extends TestCase
         $this->expectFtpConnection();
         $this->expectFtpLogin();
         $this->expectFtpOptions();
-        $this->expectLocalFileListing();
-        $this->expectRemoteFileListing();
+        $this->expectLocalFileListing([
+            '/local_dir/log01.log' => 100,
+            '/local_dir/log02.log' => 110,
+        ]);
+        $this->expectRemoteFileListing([
+            // Sizes are string ints when they come out of mlsd()
+            ['name' => 'log01.log', 'type' => 'file', 'size' => '100', ],
+            ['name' => 'log02.log', 'type' => 'file', 'size' => '110', ],
+            ['name' => 'log03.log', 'type' => 'file', 'size' => '120', ],
+        ]);
         $this->expectFtpChangeDirectory();
-        $this->expectFtpGet();
+        $this->expectFtpGet([
+            ['path' => '/local_dir/log03.log', 'file' => 'log03.log', ]
+        ]);
+        $this->expectFtpCopyOutput();
+        $this->expectFtpClose();
+
+        // Execute
+        $this->createSUT()->run();
+
+        // Reassure PHPUnit that no assertions is OK
+        $this->assertTrue(true);
+    }
+
+    public function testIgnoreRemoteFilesThatDontMatchPattern()
+    {
+        // Expectations
+        $this->expectConfigFile();
+        $this->expectLocalDirectoryCheck();
+        $this->expectFtpConnection();
+        $this->expectFtpLogin();
+        $this->expectFtpOptions();
+        $this->expectLocalFileListing([
+            '/local_dir/log01.log' => 100,
+            '/local_dir/log02.log' => 110,
+        ]);
+        $this->expectRemoteFileListing([
+            // Sizes are string ints when they come out of mlsd()
+            ['name' => 'log01.log', 'type' => 'file', 'size' => '100', ],
+            ['name' => 'log02.log', 'type' => 'file', 'size' => '110', ],
+            ['name' => 'log03.txt', 'type' => 'file', 'size' => '120', ], // Not *.log
+        ]);
+        $this->expectFtpChangeDirectory();
+        // The only difference doesn't match the remote pattern
+        $this->expectFtpGet([]);
         $this->expectFtpCopyOutput();
         $this->expectFtpClose();
 
@@ -123,12 +164,8 @@ class SyncTest extends TestCase
             andReturn(true);
     }
 
-    protected function expectLocalFileListing()
+    protected function expectLocalFileListing(array $listing)
     {
-        $listing = [
-            '/local_dir/log01.log' => 100,
-            '/local_dir/log02.log' => 110,
-        ];
         $this->
             getMockFile()->
             shouldReceive('glob')->
@@ -145,14 +182,8 @@ class SyncTest extends TestCase
         }
     }
 
-    protected function expectRemoteFileListing(): void
+    protected function expectRemoteFileListing(array $listing): void
     {
-        $listing = [
-            // Sizes are string ints when they come out of mlsd()
-            ['name' => 'log01.log', 'type' => 'file', 'size' => '100', ],
-            ['name' => 'log02.log', 'type' => 'file', 'size' => '110', ],
-            ['name' => 'log03.log', 'type' => 'file', 'size' => '120', ],
-        ];
         $this->
             getMockFtp()->
             shouldReceive('mlsd')->
@@ -169,13 +200,20 @@ class SyncTest extends TestCase
             andReturn(true);
     }
 
-    protected function expectFtpGet(): void
+    protected function expectFtpGet(array $differences): void
     {
-        $this->
-            getMockFtp()->
-            shouldReceive('get')->
-            with('/local_dir/log03.log', 'log03.log', FTP_BINARY)->
-            andReturn(true);
+        foreach ($differences as $difference) {
+            $this->
+                getMockFtp()->
+                shouldReceive('get')->
+                with($difference['path'], $difference['file'], FTP_BINARY)->
+                //once()->
+                andReturn(true);
+        }
+
+        if (!$differences) {
+            $this->getMockFtp()->shouldReceive('get')->never();
+        }
     }
 
     protected function expectFtpCopyOutput(): void
