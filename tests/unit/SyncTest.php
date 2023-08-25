@@ -51,7 +51,7 @@ class SyncTest extends TestCase
         $this->expectFtpGet([
             ['path' => '/local_dir/log03.log', 'file' => 'log03.log', ]
         ]);
-        $this->expectFtpCopyOutput();
+        $this->expectFtpCopyOutput(['log03.log']);
         $this->expectFtpClose();
 
         // Execute
@@ -82,7 +82,7 @@ class SyncTest extends TestCase
         $this->expectFtpChangeDirectory();
         // The only difference doesn't match the remote pattern
         $this->expectFtpGet([]);
-        $this->expectFtpCopyOutput();
+        $this->expectFtpCopyOutput([]);
         $this->expectFtpClose();
 
         // Execute
@@ -109,10 +109,12 @@ class SyncTest extends TestCase
             // First mock
             getMockFile()->
             shouldReceive('fileExists')->
+            once()->
             with('/project/config.php')->
             andReturn(true)->
             // Second mock
             shouldReceive('require')->
+            once()->
             with('/project/config.php')->
             andReturn([
                 'remote_directory' => '/remote_dir',
@@ -129,10 +131,12 @@ class SyncTest extends TestCase
             // First mock
             getMockFile()->
             shouldReceive('isDir')->
+            once()->
             with('/local_dir')->
             andReturn(true)->
             // Second mock
             shouldReceive('isWriteable')->
+            once()->
             with('/local_dir')->
             andReturn(true);
     }
@@ -142,6 +146,7 @@ class SyncTest extends TestCase
         $this->
             getMockFtp()->
             shouldReceive('connect')->
+            once()->
             with('ftp.example.com', 21, 20)->
             andReturn(true);
     }
@@ -151,6 +156,7 @@ class SyncTest extends TestCase
         $this->
             getMockFtp()->
             shouldReceive('login')->
+            once()->
             with('example', 'mypassword')->
             andReturn(true);
     }
@@ -160,6 +166,7 @@ class SyncTest extends TestCase
         $this->
             getMockFtp()->
             shouldReceive('pasv')->
+            once()->
             with(true)->
             andReturn(true);
     }
@@ -169,6 +176,7 @@ class SyncTest extends TestCase
         $this->
             getMockFile()->
             shouldReceive('glob')->
+            once()->
             with('/local_dir/*.log')->
             andReturn(array_keys($listing));
 
@@ -177,6 +185,7 @@ class SyncTest extends TestCase
             $this->
                 getMockFile()->
                 shouldReceive('filesize')->
+                once()->
                 with($file)->
                 andReturn($size);
         }
@@ -187,6 +196,7 @@ class SyncTest extends TestCase
         $this->
             getMockFtp()->
             shouldReceive('mlsd')->
+            once()->
             with('/remote_dir')->
             andReturn($listing);
     }
@@ -196,6 +206,7 @@ class SyncTest extends TestCase
         $this->
             getMockFtp()->
             shouldReceive('chdir')->
+            once()->
             with('/remote_dir')->
             andReturn(true);
     }
@@ -206,8 +217,8 @@ class SyncTest extends TestCase
             $this->
                 getMockFtp()->
                 shouldReceive('get')->
+                once()->
                 with($difference['path'], $difference['file'], FTP_BINARY)->
-                //once()->
                 andReturn(true);
         }
 
@@ -216,12 +227,19 @@ class SyncTest extends TestCase
         }
     }
 
-    protected function expectFtpCopyOutput(): void
+    protected function expectFtpCopyOutput(array $files): void
     {
-        $this->
-            getMockOutput()->
-            shouldReceive('println')->
-            with('Copy log03.log OK');
+        foreach ($files as $file) {
+            $this->
+                getMockOutput()->
+                shouldReceive('println')->
+                once()->
+                with("Copy $file OK");
+        }
+
+        if (!$files) {
+            $this->getMockOutput()->shouldReceive('println')->never();
+        }
     }
 
     protected function expectFtpClose(): void
