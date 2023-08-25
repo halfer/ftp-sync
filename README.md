@@ -45,6 +45,21 @@ the remote files will be copied here
 5. The config value `remote_directory` will be used in FTP commands to find the remote folder to pull files from
 6. Add a line in your Cron to call the script
 
+Required config options
+---
+
+* remote_directory (string)
+* local_directory (string)
+* hostname (string)
+* username (string)
+* password (string)
+
+Optional config options
+---
+
+* port (integer - defaults to 21)
+* pasv (boolean - defaults to true)
+
 Calling the script
 ---
 
@@ -89,7 +104,6 @@ Wishlist
 A few things that would be good to add:
 
 * Exits cleanly if the FTP extension is not loaded
-* An ability to specify a non-standard FTP port
 * An ability to specify an FTP timeout
 * Files are presently synced in a random order, add a switch to sync them in alphanumeric order
 * Configurable file filters (presently this is hardwired to `*.log`)

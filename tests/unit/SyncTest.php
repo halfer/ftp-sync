@@ -124,6 +124,37 @@ class SyncTest extends TestCase
         $this->assertTrue(true);
     }
 
+    public function testDontSwitchToPassiveMode() {
+        // Expectations
+        $this->expectConfigFile(['pasv' => false, ]);
+        $this->expectLocalDirectoryCheck();
+        $this->expectFtpConnection();
+        $this->expectFtpLogin();
+        $this->expectFtpOptions(false);
+        $this->expectLocalFileListing([
+            '/local_dir/log01.log' => 100,
+            '/local_dir/log02.log' => 110,
+        ]);
+        $this->expectRemoteFileListing([
+            // Sizes are string ints when they come out of mlsd()
+            ['name' => 'log01.log', 'type' => 'file', 'size' => '100', ],
+            ['name' => 'log02.log', 'type' => 'file', 'size' => '110', ],
+            ['name' => 'log03.log', 'type' => 'file', 'size' => '120', ],
+        ]);
+        $this->expectFtpChangeDirectory();
+        $this->expectFtpGet([
+            ['path' => '/local_dir/log03.log', 'file' => 'log03.log', ]
+        ]);
+        $this->expectFtpCopyOutput(['log03.log']);
+        $this->expectFtpClose();
+
+        // Execute
+        $this->createSUT()->run();
+
+        // Reassure PHPUnit that no assertions is OK
+        $this->assertTrue(true);
+    }
+
     protected function createSUT()
     {
         return new FtpSync(
@@ -197,12 +228,12 @@ class SyncTest extends TestCase
             andReturn(true);
     }
 
-    protected function expectFtpOptions(): void
+    protected function expectFtpOptions($pasv = true): void
     {
         $this->
             getMockFtp()->
             shouldReceive('pasv')->
-            once()->
+            times($pasv ? 1 : 0)->
             with(true)->
             andReturn(true);
     }

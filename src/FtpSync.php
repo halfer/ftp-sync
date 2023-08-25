@@ -40,7 +40,7 @@ class FtpSync
 
         // Connect to the FTP server
         $ok = $this->makeConnection($config);
-        $this->setFtpOptions();
+        $this->setFtpOptions($config);
 
         // Generate the file indexes on both sides
         $localIndex = $this->getLocalIndex($localDirectory);
@@ -198,11 +198,12 @@ class FtpSync
         return $ok;
     }
 
-    /**
-     * @todo Passive mode should probably be a config option
-     */
-    protected function setFtpOptions(): void
+    protected function setFtpOptions(array $config): void
     {
+        if (!$this->getPassive($config)) {
+            return;
+        }
+
         $ok = $this->getFtp()->pasv(true);
         if (!$ok) {
             $this->errorAndExit('Could not switch to passive mode');
@@ -264,6 +265,16 @@ class FtpSync
         }
 
         return $port;
+    }
+
+    protected function getPassive(array $config): bool
+    {
+        $pasv = true; // Default
+        if (isset($config['pasv']) && $config['pasv'] === false) {
+            $pasv = false;
+        }
+
+        return $pasv;
     }
 
     protected function getLocalDirectory(array $config): string
