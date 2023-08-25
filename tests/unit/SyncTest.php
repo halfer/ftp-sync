@@ -92,6 +92,38 @@ class SyncTest extends TestCase
         $this->assertTrue(true);
     }
 
+    public function testNonStandardFtpPortNumber()
+    {
+        // Expectations
+        $this->expectConfigFile(['port' => 9999, ]);
+        $this->expectLocalDirectoryCheck();
+        $this->expectFtpConnection(9999);
+        $this->expectFtpLogin();
+        $this->expectFtpOptions();
+        $this->expectLocalFileListing([
+            '/local_dir/log01.log' => 100,
+            '/local_dir/log02.log' => 110,
+        ]);
+        $this->expectRemoteFileListing([
+            // Sizes are string ints when they come out of mlsd()
+            ['name' => 'log01.log', 'type' => 'file', 'size' => '100', ],
+            ['name' => 'log02.log', 'type' => 'file', 'size' => '110', ],
+            ['name' => 'log03.log', 'type' => 'file', 'size' => '120', ],
+        ]);
+        $this->expectFtpChangeDirectory();
+        $this->expectFtpGet([
+            ['path' => '/local_dir/log03.log', 'file' => 'log03.log', ]
+        ]);
+        $this->expectFtpCopyOutput(['log03.log']);
+        $this->expectFtpClose();
+
+        // Execute
+        $this->createSUT()->run();
+
+        // Reassure PHPUnit that no assertions is OK
+        $this->assertTrue(true);
+    }
+
     protected function createSUT()
     {
         return new FtpSync(
@@ -103,8 +135,18 @@ class SyncTest extends TestCase
         );
     }
 
-    protected function expectConfigFile(): void
+    protected function expectConfigFile(array $extraConfig = []): void
     {
+        $config = array_merge(
+            [
+                'remote_directory' => '/remote_dir',
+                'local_directory' => '/local_dir',
+                'hostname' => 'ftp.example.com',
+                'username' => 'example',
+                'password' => 'mypassword',
+            ],
+            $extraConfig
+        );
         $this->
             // First mock
             getMockFile()->
@@ -116,13 +158,7 @@ class SyncTest extends TestCase
             shouldReceive('require')->
             once()->
             with('/project/config.php')->
-            andReturn([
-                'remote_directory' => '/remote_dir',
-                'local_directory' => '/local_dir',
-                'hostname' => 'ftp.example.com',
-                'username' => 'example',
-                'password' => 'mypassword',
-            ]);
+            andReturn($config);
     }
 
     protected function expectLocalDirectoryCheck(): void
@@ -141,13 +177,13 @@ class SyncTest extends TestCase
             andReturn(true);
     }
 
-    protected function expectFtpConnection(): void
+    protected function expectFtpConnection($port = 21): void
     {
         $this->
             getMockFtp()->
             shouldReceive('connect')->
             once()->
-            with('ftp.example.com', 21, 20)->
+            with('ftp.example.com', $port, 20)->
             andReturn(true);
     }
 

@@ -181,7 +181,11 @@ class FtpSync
 
     protected function makeConnection(array $config): bool
     {
-        $ok = $this->getFtp()->connect($this->getFtpHostName($config), 21, 20);
+        $ok = $this->getFtp()->connect(
+            $this->getFtpHostName($config),
+            $this->getFtpPort($config),
+            20
+        );
         if (!$ok) {
             $this->errorAndExit('Could not connect to FTP server');
         }
@@ -250,6 +254,16 @@ class FtpSync
     protected function getFtpPassword(array $config): string
     {
         return $this->getConfigKey($config, 'password');
+    }
+
+    protected function getFtpPort(array $config): int
+    {
+        $port = 21;
+        if (isset($config['port'])) {
+            $port = (int) $config['port'];
+        }
+
+        return $port;
     }
 
     protected function getLocalDirectory(array $config): string
