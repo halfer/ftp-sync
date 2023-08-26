@@ -326,6 +326,15 @@ class SyncTest extends TestCase
 
     protected function expectLocalFileListing(array $listing, $filter = '*.log')
     {
+        // Let's just quickly verify the supplied listing
+        foreach ($listing as $file => $size) {
+            if (!is_string($file) || !is_int($size)) {
+                throw new RuntimeException(
+                    'The required format for expectLocalFileListing is [file:string => size:int, ...]'
+                );
+            }
+        }
+
         $this->
             getMockFile()->
             shouldReceive('glob')->
@@ -346,6 +355,18 @@ class SyncTest extends TestCase
 
     protected function expectRemoteFileListing(array $listing): void
     {
+        // Let's just quickly verify the supplied listing
+        foreach ($listing as $file) {
+            $name = isset($file['name']) ? $file['name'] : null;
+            $type = isset($file['type']) ? $file['type'] : null;
+            $size = isset($file['size']) ? $file['size'] : null;
+            if (!is_string($name) || !is_string($type) || !is_string($size)) {
+                throw new RuntimeException(
+                    'The required format for expectRemoteFileListing is [[name => string, type => string, size => string], ...]'
+                );
+            }
+        }
+
         $this->
             getMockFtp()->
             shouldReceive('mlsd')->
