@@ -184,7 +184,7 @@ class FtpSync
         $ok = $this->getFtp()->connect(
             $this->getFtpHostName($config),
             $this->getFtpPort($config),
-            20
+            $this->getFtpTimeout($config)
         );
         if (!$ok) {
             $this->errorAndExit('Could not connect to FTP server');
@@ -265,6 +265,16 @@ class FtpSync
         }
 
         return $port;
+    }
+
+    protected function getFtpTimeout(array $config): int
+    {
+        $timeout = 20;
+        if (isset($config['timeout']) && $config['timeout']) {
+            $timeout = (int) $config['timeout'];
+        }
+
+        return $timeout;
     }
 
     protected function getPassive(array $config): bool

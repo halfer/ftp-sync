@@ -51,6 +51,13 @@ class SyncTest extends TestCase
         ];
     }
 
+    protected function defaultFtpGetOperations()
+    {
+        return [
+            ['path' => '/local_dir/log03.log', 'file' => 'log03.log', ]
+        ];
+    }
+
     // *
     // End of predefined values
     // *
@@ -66,9 +73,7 @@ class SyncTest extends TestCase
         $this->expectLocalFileListing($this->defaultLocalListing());
         $this->expectRemoteFileListing($this->defaultRemoteFileListing());
         $this->expectFtpChangeDirectory();
-        $this->expectFtpGet([
-            ['path' => '/local_dir/log03.log', 'file' => 'log03.log', ]
-        ]);
+        $this->expectFtpGet($this->defaultFtpGetOperations());
         $this->expectFtpCopyOutput(['log03.log']);
         $this->expectFtpClose();
 
@@ -115,9 +120,7 @@ class SyncTest extends TestCase
         $this->expectLocalFileListing($this->defaultLocalListing());
         $this->expectRemoteFileListing($this->defaultRemoteFileListing());
         $this->expectFtpChangeDirectory();
-        $this->expectFtpGet([
-            ['path' => '/local_dir/log03.log', 'file' => 'log03.log', ]
-        ]);
+        $this->expectFtpGet($this->defaultFtpGetOperations());
         $this->expectFtpCopyOutput(['log03.log']);
         $this->expectFtpClose();
 
@@ -138,9 +141,7 @@ class SyncTest extends TestCase
         $this->expectLocalFileListing($this->defaultLocalListing());
         $this->expectRemoteFileListing($this->defaultRemoteFileListing());
         $this->expectFtpChangeDirectory();
-        $this->expectFtpGet([
-            ['path' => '/local_dir/log03.log', 'file' => 'log03.log', ]
-        ]);
+        $this->expectFtpGet($this->defaultFtpGetOperations());
         $this->expectFtpCopyOutput(['log03.log']);
         $this->expectFtpClose();
 
@@ -153,7 +154,24 @@ class SyncTest extends TestCase
 
     public function testNonStandardFtpTimeout()
     {
-        $this->markTestIncomplete();
+        // Expectations
+        $this->expectConfigFile(['timeout' => 60, ]);
+        $this->expectLocalDirectoryCheck();
+        $this->expectFtpConnection(21, 60);
+        $this->expectFtpLogin();
+        $this->expectFtpOptions();
+        $this->expectLocalFileListing($this->defaultLocalListing());
+        $this->expectRemoteFileListing($this->defaultRemoteFileListing());
+        $this->expectFtpChangeDirectory();
+        $this->expectFtpGet($this->defaultFtpGetOperations());
+        $this->expectFtpCopyOutput(['log03.log']);
+        $this->expectFtpClose();
+
+        // Execute
+        $this->createSUT()->run();
+
+        // Reassure PHPUnit that no assertions is OK
+        $this->assertTrue(true);
     }
 
     protected function createSUT()
@@ -209,13 +227,13 @@ class SyncTest extends TestCase
             andReturn(true);
     }
 
-    protected function expectFtpConnection($port = 21): void
+    protected function expectFtpConnection($port = 21, $timeout = 20): void
     {
         $this->
             getMockFtp()->
             shouldReceive('connect')->
             once()->
-            with('ftp.example.com', $port, 20)->
+            with('ftp.example.com', $port, $timeout)->
             andReturn(true);
     }
 

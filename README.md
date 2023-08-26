@@ -104,7 +104,6 @@ Wishlist
 A few things that would be good to add:
 
 * Exits cleanly if the FTP extension is not loaded
-* An ability to specify an FTP timeout
 * Files are presently synced in a random order, add a switch to sync them in alphanumeric order
 * Configurable file filters (presently this is hardwired to `*.log`)
 * Useful verbose output (it is only noisy in error conditions presently)
