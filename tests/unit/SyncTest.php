@@ -174,6 +174,40 @@ class SyncTest extends TestCase
         $this->assertTrue(true);
     }
 
+    public function testLocalIndexFilter()
+    {
+        $this->markTestIncomplete();
+    }
+
+    /**
+     * Since the default filter is *.log, we try removing the remote filter here
+     */
+    public function testRemoteIndexFilter()
+    {
+        // Expectations
+        $this->expectConfigFile(['remote_file_filter' => '', ]);
+        $this->expectLocalDirectoryCheck();
+        $this->expectFtpConnection();
+        $this->expectFtpLogin();
+        $this->expectFtpOptions();
+        $this->expectLocalFileListing($this->defaultLocalListing());
+        $remoteListing = $this->defaultRemoteFileListing();
+        $remoteListing[2]['name'] = 'log03.txt'; // Not *.log
+        $this->expectRemoteFileListing($remoteListing);
+        $this->expectFtpChangeDirectory();
+        $this->expectFtpGet([
+            ['path' => '/local_dir/log03.txt', 'file' => 'log03.txt', ]
+        ]);
+        $this->expectFtpCopyOutput(['log03.txt']);
+        $this->expectFtpClose();
+
+        // Execute
+        $this->createSUT()->run();
+
+        // Reassure PHPUnit that no assertions is OK
+        $this->assertTrue(true);
+    }
+
     protected function createSUT()
     {
         return new FtpSync(
@@ -194,6 +228,8 @@ class SyncTest extends TestCase
                 'hostname' => 'ftp.example.com',
                 'username' => 'example',
                 'password' => 'mypassword',
+                "local_file_filter" => "*.log",
+                "remote_file_filter" => "#\.log$#",
             ],
             $extraConfig
         );
@@ -257,13 +293,13 @@ class SyncTest extends TestCase
             andReturn(true);
     }
 
-    protected function expectLocalFileListing(array $listing)
+    protected function expectLocalFileListing(array $listing, $filter = '*.log')
     {
         $this->
             getMockFile()->
             shouldReceive('glob')->
             once()->
-            with('/local_dir/*.log')->
+            with('/local_dir/' . $filter)->
             andReturn(array_keys($listing));
 
         // There is a filesize call on each file too

@@ -43,9 +43,9 @@ class FtpSync
         $this->setFtpOptions($config);
 
         // Generate the file indexes on both sides
-        $localIndex = $this->getLocalIndex($localDirectory);
+        $localIndex = $this->getLocalIndex($localDirectory, $config);
         $remoteDirectory = $this->getRemoteDirectory($config);
-        $remoteIndex = $this->getRemoteIndex($remoteDirectory);
+        $remoteIndex = $this->getRemoteIndex($remoteDirectory, $config);
         $fileList = $this->indexDifferencer($remoteIndex, $localIndex);
 
         $this->changeRemoteDir($remoteDirectory);
@@ -135,12 +135,11 @@ class FtpSync
         return $differences;
     }
 
-    /**
-     * @todo Inject the wildcard from config
-     */
-    protected function getLocalIndex(string $directory): array
+    protected function getLocalIndex(string $directory, array $config): array
     {
-        $fileList = $this->getFile()->glob($directory . '/*.log');
+        $fileList = $this->
+            getFile()->
+            glob($directory . '/' . $this->getLocalFileFilter($config));
         $localIndex = [];
 
         // Loop through files and get leaf-names and file sizes
@@ -151,15 +150,13 @@ class FtpSync
         return $localIndex;
     }
 
-    /**
-     * @todo Inject the wildcard from config
-     */
-    protected function getRemoteIndex(string $directory): array
+    protected function getRemoteIndex(string $directory, array $config): array
     {
         $fileList = $this->getFtp()->mlsd($directory);
-        $remoteIndex = [];
+        $filter = $this->getRemoteFileFilter($config);
 
         // Loop through files and get leaf-names and file sizes
+        $remoteIndex = [];
         foreach ($fileList as $file) {
             // Ignore anything that is not a file
             if ($file['type'] !== 'file') {
@@ -167,9 +164,11 @@ class FtpSync
             }
 
             // Ignore anything that does not match the log file pattern
-            $matchesPattern = preg_match('#\.log$#', $file['name']);
-            if (!$matchesPattern) {
-                continue;
+            if ($filter) {
+                $matchesPattern = preg_match($filter, $file['name']);
+                if (!$matchesPattern) {
+                    continue;
+                }
             }
 
             // For some reason the FTP func returns the size as a string
@@ -285,6 +284,26 @@ class FtpSync
         }
 
         return $pasv;
+    }
+
+    protected function getLocalFileFilter(array $config): string
+    {
+        $filter = '*';
+        if (isset($config['local_file_filter']) && $config['local_file_filter']) {
+            $filter = $config['local_file_filter'];
+        }
+
+        return $filter;
+    }
+
+    protected function getRemoteFileFilter(array $config): string
+    {
+        $filter = '';
+        if (isset($config['remote_file_filter']) && $config['remote_file_filter']) {
+            $filter = $config['remote_file_filter'];
+        }
+
+        return $filter;
     }
 
     protected function getLocalDirectory(array $config): string

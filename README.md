@@ -59,6 +59,8 @@ Optional config options
 
 * port (integer - defaults to 21)
 * pasv (boolean - defaults to true)
+* remote_file_filter (string regex - defaults to empty, no filter)
+* local_file_filter (string wildcard, defaults to *)
 
 Calling the script
 ---
@@ -105,7 +107,6 @@ A few things that would be good to add:
 
 * Exits cleanly if the FTP extension is not loaded
 * Files are presently synced in a random order, add a switch to sync them in alphanumeric order
-* Configurable file filters (presently this is hardwired to `*.log`)
 * Useful verbose output (it is only noisy in error conditions presently)
 * A "dry run" mode on the console (there is a simple web one already)
 * Disable script action over the web by default (needs a config option to enable)
