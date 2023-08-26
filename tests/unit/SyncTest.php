@@ -174,9 +174,40 @@ class SyncTest extends TestCase
         $this->assertTrue(true);
     }
 
+    /**
+     * Since the default filter is *.log, we try removing the remote filter here
+     */
     public function testLocalIndexFilter()
     {
-        $this->markTestIncomplete();
+        // Expectations
+        $this->expectConfigFile([
+            // Need the two filters to agree for this test. "*" for local is the
+            // same as empty for remote - they both mean "fetch all".
+            'local_file_filter' => '*',
+            'remote_file_filter' => '',
+        ]);
+        $this->expectLocalDirectoryCheck();
+        $this->expectFtpConnection();
+        $this->expectFtpLogin();
+        $this->expectFtpOptions();
+        $localListing = $this->defaultLocalListing();
+        $localListing['/local_dir/log03.txt'] = 200; // Size is different
+        $this->expectLocalFileListing($localListing, '*'); // Non-standard glob expectation
+        $remoteListing = $this->defaultRemoteFileListing();
+        $remoteListing[2]['name'] = 'log03.txt'; // Not *.log
+        $this->expectRemoteFileListing($remoteListing);
+        $this->expectFtpChangeDirectory();
+        $this->expectFtpGet([
+            ['path' => '/local_dir/log03.txt', 'file' => 'log03.txt', ]
+        ]);
+        $this->expectFtpCopyOutput(['log03.txt']);
+        $this->expectFtpClose();
+
+        // Execute
+        $this->createSUT()->run();
+
+        // Reassure PHPUnit that no assertions is OK
+        $this->assertTrue(true);
     }
 
     /**
