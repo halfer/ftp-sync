@@ -7,17 +7,17 @@ namespace FtpSync;
  */
 class Output
 {
-    public function print(string $message, $exit = false): void
+    public function print(string $message, ?int $exitCode = null): void
     {
         echo $message;
 
-        if ($exit) {
-            exit();
+        if (!is_null($exitCode)) {
+            exit($exitCode);
         }
     }
 
-    public function println(string $message, $exit = false): void
+    public function println(string $message, ?int $exitCode = null): void
     {
-        $this->print("$message\n", $exit);
+        $this->print("$message\n", $exitCode);
     }
 }
