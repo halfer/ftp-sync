@@ -391,7 +391,6 @@ class FtpSync
      */
     protected function errorAndExit(string $message): void
     {
-        $this->output->println("Fatal error: $message");
-        exit(1);
+        $this->output->println("Fatal error: $message", true);
     }
 }
