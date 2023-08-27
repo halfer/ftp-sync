@@ -61,6 +61,7 @@ Optional config options
 * pasv (boolean - defaults to true)
 * remote_file_filter (string regex - defaults to empty, no filter)
 * local_file_filter (string wildcard, defaults to *)
+* file_copies_per_run (int - defaults to 10)
 
 Calling the script
 ---

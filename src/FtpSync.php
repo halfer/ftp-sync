@@ -54,7 +54,7 @@ class FtpSync
         $this->copyFiles(
             $fileList,
             $localDirectory,
-            10
+            $this->getFileCopiesPerRun($config)
         );
 
         $this->ftpClose();
@@ -304,6 +304,16 @@ class FtpSync
         }
 
         return $filter;
+    }
+
+    protected function getFileCopiesPerRun(array $config): int
+    {
+        $copies = 10;
+        if (isset($config['file_copies_per_run']) && $config['file_copies_per_run']) {
+            $copies = $config['file_copies_per_run'];
+        }
+
+        return $copies;
     }
 
     protected function getLocalDirectory(array $config): string

@@ -33,7 +33,7 @@ class SyncTest extends TestCase
     // To aid brevity we have a few predefined values that are used often
     // *
 
-    protected function defaultLocalListing()
+    protected function defaultLocalListing(): array
     {
         return [
             '/local_dir/log01.log' => 100,
@@ -41,7 +41,7 @@ class SyncTest extends TestCase
         ];
     }
 
-    protected function defaultRemoteFileListing()
+    protected function defaultRemoteFileListing(): array
     {
         return [
             // Sizes are string ints when they come out of mlsd()
@@ -51,7 +51,21 @@ class SyncTest extends TestCase
         ];
     }
 
-    protected function defaultFtpGetOperations()
+    protected function largeRemoteFileListing(): array
+    {
+        $listing = [];
+        for ($i = 0; $i < 20; $i++) {
+            $listing[] = [
+                'name' => sprintf("log%02d.log", $i + 1),
+                'type' => 'file',
+                'size' => (string) (100 + $i * 10),
+            ];
+        }
+
+        return $listing;
+    }
+
+    protected function defaultFtpGetOperations(): array
     {
         return [
             ['path' => '/local_dir/log03.log', 'file' => 'log03.log', ]
@@ -239,6 +253,56 @@ class SyncTest extends TestCase
         $this->assertTrue(true);
     }
 
+    public function testDefaultFileCopiesPerRun()
+    {
+        // Expectations
+        $this->expectConfigFile();
+        $this->expectLocalDirectoryCheck();
+        $this->expectFtpConnection();
+        $this->expectFtpLogin();
+        $this->expectFtpOptions();
+        $this->expectLocalFileListing([]); // Empty
+        $this->expectRemoteFileListing($this->largeRemoteFileListing()); // A biggie!
+        $this->expectFtpChangeDirectory();
+        $this->expectFtpGetUsingCountsOnly(10); // Default counts per op
+        $this->expectFtpCopyOutput([
+            'log01.log', 'log02.log', 'log03.log', 'log04.log', 'log05.log',
+            'log06.log', 'log07.log', 'log08.log', 'log09.log', 'log10.log',
+        ]);
+        $this->expectFtpClose();
+
+        // Execute
+        $this->createSUT()->run();
+
+        // Reassure PHPUnit that no assertions is OK
+        $this->assertTrue(true);
+    }
+
+    public function testCustomFileCopiesPerRun()
+    {
+        // Expectations
+        $this->expectConfigFile(['file_copies_per_run' => 8, ]); // Custom value
+        $this->expectLocalDirectoryCheck();
+        $this->expectFtpConnection();
+        $this->expectFtpLogin();
+        $this->expectFtpOptions();
+        $this->expectLocalFileListing([]); // Empty
+        $this->expectRemoteFileListing($this->largeRemoteFileListing()); // A biggie!
+        $this->expectFtpChangeDirectory();
+        $this->expectFtpGetUsingCountsOnly(8); // Custom value
+        $this->expectFtpCopyOutput([
+            'log01.log', 'log02.log', 'log03.log', 'log04.log', 'log05.log',
+            'log06.log', 'log07.log', 'log08.log',
+        ]);
+        $this->expectFtpClose();
+
+        // Execute
+        $this->createSUT()->run();
+
+        // Reassure PHPUnit that no assertions is OK
+        $this->assertTrue(true);
+    }
+
     protected function createSUT()
     {
         return new FtpSync(
@@ -399,6 +463,15 @@ class SyncTest extends TestCase
         if (!$differences) {
             $this->getMockFtp()->shouldReceive('get')->never();
         }
+    }
+
+    protected function expectFtpGetUsingCountsOnly(int $count): void
+    {
+        $this->
+            getMockFtp()->
+            shouldReceive('get')->
+            times($count)->
+            andReturn(true);
     }
 
     protected function expectFtpCopyOutput(array $files): void
