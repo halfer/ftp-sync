@@ -10,6 +10,8 @@ class FtpSync
     protected $ftp;
     /* @var Output $output */
     protected $output;
+    /* @var PhpExtensions $phpExtensions */
+    protected $phpExtensions;
     /* @var string $projectRoot */
     protected $projectRoot;
     protected $pathNames = [];
@@ -17,12 +19,14 @@ class FtpSync
 
     public function __construct(
         File $file, Ftp $ftp, Output $output,
+        PhpExtensions $phpExtensions,
         string $projectRoot, array $pathNames, array $options = []
     )
     {
         $this->file = $file;
         $this->ftp = $ftp;
         $this->output = $output;
+        $this->phpExtensions = $phpExtensions;
         $this->projectRoot = $projectRoot;
         $this->pathNames = $pathNames;
         $this->options = $options;
@@ -30,7 +34,8 @@ class FtpSync
 
     public function run(): void
     {
-        // Fetch the config
+        // Initial checks, fetch the config
+        $this->checkEnvironment();
         $config = $this->getConfig($this->getConfigPath());
 
         // Ensure we can write to the sync target directory
@@ -359,6 +364,18 @@ class FtpSync
         }
 
         return $this->pathNames[$name];
+    }
+
+    protected function checkEnvironment(): void
+    {
+        if (!$this->getPhpExtensions()->extensionLoaded('ftp')) {
+            $this->errorAndExit("Cannot find PHP 'ftp' extension");
+        }
+    }
+
+    protected function getPhpExtensions(): PhpExtensions
+    {
+        return $this->phpExtensions;
     }
 
     /**

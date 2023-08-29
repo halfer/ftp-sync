@@ -106,7 +106,6 @@ Wishlist
 
 A few things that would be good to add:
 
-* Exits cleanly if the FTP extension is not loaded
 * Files are presently synced in a random order, add a switch to sync them in alphanumeric order
 * Useful verbose output (it is only noisy in error conditions presently)
 * A "dry run" mode on the console (there is a simple web one already)

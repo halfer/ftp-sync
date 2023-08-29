@@ -13,6 +13,7 @@ use FtpSync\FtpSync;
 use FtpSync\File;
 use FtpSync\Ftp;
 use FtpSync\Output;
+use FtpSync\PhpExtensions;
 
 // Load dependencies (avoiding Composer for now)
 $projectRoot = realpath(__DIR__);
@@ -33,6 +34,7 @@ $ftpSync = new FtpSync(
     new File(),
     new Ftp(),
     new Output(),
+    new FtpSync\PhpExtensions(),
     $projectRoot,
     ['config' => 'config.php', ],
     $options

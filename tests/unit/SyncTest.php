@@ -6,6 +6,7 @@ use FtpSync\File;
 use FtpSync\Ftp;
 use FtpSync\FtpSync;
 use FtpSync\Output;
+use FtpSync\PhpExtensions;
 use Mockery\MockInterface;
 
 class SyncTest extends TestCase
@@ -16,12 +17,15 @@ class SyncTest extends TestCase
     protected $ftp;
     /* @var Output $output */
     protected $output;
+    /* @var PhpExtensions $phpExtensions */
+    protected $phpExtensions;
 
     public function setUp(): void
     {
         $this->file = Mockery::mock(File::class);
         $this->ftp = Mockery::mock(Ftp::class);
         $this->output = Mockery::mock(Output::class);
+        $this->phpExtensions = Mockery::mock(PhpExtensions::class);
     }
 
     public function tearDown(): void
@@ -79,6 +83,7 @@ class SyncTest extends TestCase
     public function testSimpleFullRun()
     {
         // Expectations
+        $this->expectPhpExtensions();
         $this->expectConfigFile();
         $this->expectLocalDirectoryCheck();
         $this->expectFtpConnection();
@@ -101,6 +106,7 @@ class SyncTest extends TestCase
     public function testIgnoreRemoteFilesThatDontMatchPattern()
     {
         // Expectations
+        $this->expectPhpExtensions();
         $this->expectConfigFile();
         $this->expectLocalDirectoryCheck();
         $this->expectFtpConnection();
@@ -126,6 +132,7 @@ class SyncTest extends TestCase
     public function testNonStandardFtpPortNumber()
     {
         // Expectations
+        $this->expectPhpExtensions();
         $this->expectConfigFile(['port' => 9999, ]);
         $this->expectLocalDirectoryCheck();
         $this->expectFtpConnection(9999);
@@ -147,6 +154,7 @@ class SyncTest extends TestCase
 
     public function testDontSwitchToPassiveMode() {
         // Expectations
+        $this->expectPhpExtensions();
         $this->expectConfigFile(['pasv' => false, ]);
         $this->expectLocalDirectoryCheck();
         $this->expectFtpConnection();
@@ -169,6 +177,7 @@ class SyncTest extends TestCase
     public function testNonStandardFtpTimeout()
     {
         // Expectations
+        $this->expectPhpExtensions();
         $this->expectConfigFile(['timeout' => 60, ]);
         $this->expectLocalDirectoryCheck();
         $this->expectFtpConnection(21, 60);
@@ -194,6 +203,7 @@ class SyncTest extends TestCase
     public function testLocalIndexFilter()
     {
         // Expectations
+        $this->expectPhpExtensions();
         $this->expectConfigFile([
             // Need the two filters to agree for this test. "*" for local is the
             // same as empty for remote - they both mean "fetch all".
@@ -230,6 +240,7 @@ class SyncTest extends TestCase
     public function testRemoteIndexFilter()
     {
         // Expectations
+        $this->expectPhpExtensions();
         $this->expectConfigFile(['remote_file_filter' => '', ]);
         $this->expectLocalDirectoryCheck();
         $this->expectFtpConnection();
@@ -256,6 +267,7 @@ class SyncTest extends TestCase
     public function testDefaultFileCopiesPerRun()
     {
         // Expectations
+        $this->expectPhpExtensions();
         $this->expectConfigFile();
         $this->expectLocalDirectoryCheck();
         $this->expectFtpConnection();
@@ -281,6 +293,7 @@ class SyncTest extends TestCase
     public function testCustomFileCopiesPerRun()
     {
         // Expectations
+        $this->expectPhpExtensions();
         $this->expectConfigFile(['file_copies_per_run' => 8, ]); // Custom value
         $this->expectLocalDirectoryCheck();
         $this->expectFtpConnection();
@@ -309,9 +322,20 @@ class SyncTest extends TestCase
             $this->getMockFile(),
             $this->getMockFtp(),
             $this->getMockOutput(),
+            $this->getMockPhpExtensions(),
             '/project',
             ['config' => 'config.php']
         );
+    }
+
+    protected function expectPhpExtensions(): void
+    {
+        $this->
+            getMockPhpExtensions()->
+            shouldReceive('extensionLoaded')->
+            once()->
+            with('ftp')->
+            andReturn(true);
     }
 
     protected function expectConfigFile(array $extraConfig = []): void
@@ -518,5 +542,13 @@ class SyncTest extends TestCase
     protected function getMockOutput()
     {
         return $this->output;
+    }
+
+    /**
+     * @return PhpExtensions|MockInterface
+     */
+    protected function getMockPhpExtensions()
+    {
+        return $this->phpExtensions;
     }
 }
