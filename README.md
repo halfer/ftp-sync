@@ -112,6 +112,7 @@ A few things that would be good to add:
 * Disable script action over the web by default (needs a config option to enable)
 * Local-side file deletion (for where a source file is removed)
 * Automated tests
+* Run tests in GitHub actions
 * Some notes on using this tool securely
 
 Support
