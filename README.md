@@ -1,6 +1,8 @@
 README
 ===
 
+![Build Status](https://github.com/halfer/ftp-sync/actions/workflows/branch.yml/badge.svg)
+
 Introduction
 ---
 

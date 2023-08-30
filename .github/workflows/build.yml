@@ -1,0 +1,17 @@
+name: Run FtpSync tests
+on: [push]
+
+jobs:
+  Run-Tests:
+    runs-on: ubuntu-latest
+    container:
+      image: php:7.3-cli-alpine
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Install Composer
+        run:  sh bin/install-composer.sh
+      - name: Install the dependencies
+        run:  php composer.phar install --dev
+      - name: Run the tests
+        run:  php vendor/bin/phpunit
