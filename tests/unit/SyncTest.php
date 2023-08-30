@@ -1,13 +1,12 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
-
 use FtpSync\File;
 use FtpSync\Ftp;
 use FtpSync\FtpSync;
 use FtpSync\Output;
 use FtpSync\PhpExtensions;
 use Mockery\MockInterface;
+use PHPUnit\Framework\TestCase;
 
 class SyncTest extends TestCase
 {
