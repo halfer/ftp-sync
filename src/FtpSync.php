@@ -44,7 +44,7 @@ class FtpSync
         $this->ensureLocalTargetDirectoryIsWriteable($localDirectory);
 
         // Connect to the FTP server
-        $ok = $this->makeConnection($config);
+        $this->makeConnection($config);
         $this->setFtpOptions($config);
 
         // Generate the file indexes on both sides
@@ -183,7 +183,7 @@ class FtpSync
         return $remoteIndex;
     }
 
-    protected function makeConnection(array $config): bool
+    protected function makeConnection(array $config): void
     {
         $ok = $this->getFtp()->connect(
             $this->getFtpHostName($config),
@@ -198,8 +198,6 @@ class FtpSync
         if (!$ok) {
             $this->errorAndExit('Could not authenticate to FTP server');
         }
-
-        return $ok;
     }
 
     protected function setFtpOptions(array $config): void
