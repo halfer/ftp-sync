@@ -16,6 +16,7 @@ class FtpSync
     protected $projectRoot;
     protected $pathNames = [];
     protected $options = [];
+    protected $config = [];
 
     public function __construct(
         File $file, Ftp $ftp, Output $output,
@@ -36,21 +37,21 @@ class FtpSync
     {
         // Initial checks, fetch the config
         $this->checkEnvironment();
-        $config = $this->getConfig($this->getConfigPath());
+        $this->config = $this->requireConfig($this->getConfigPath());
 
         // Ensure we can write to the sync target directory
-        $localDirectory = $this->getLocalDirectory($config);
+        $localDirectory = $this->getLocalDirectory();
         $this->ensureLocalTargetDirectoryExists($localDirectory);
         $this->ensureLocalTargetDirectoryIsWriteable($localDirectory);
 
         // Connect to the FTP server
-        $this->makeConnection($config);
-        $this->setFtpOptions($config);
+        $this->makeConnection();
+        $this->setFtpOptions();
 
         // Generate the file indexes on both sides
-        $localIndex = $this->getLocalIndex($localDirectory, $config);
-        $remoteDirectory = $this->getRemoteDirectory($config);
-        $remoteIndex = $this->getRemoteIndex($remoteDirectory, $config);
+        $localIndex = $this->getLocalIndex($localDirectory);
+        $remoteDirectory = $this->getRemoteDirectory();
+        $remoteIndex = $this->getRemoteIndex($remoteDirectory);
         $fileList = $this->indexDifferencer($remoteIndex, $localIndex);
 
         $this->changeRemoteDir($remoteDirectory);
@@ -59,7 +60,7 @@ class FtpSync
         $this->copyFiles(
             $fileList,
             $localDirectory,
-            $this->getFileCopiesPerRun($config)
+            $this->getFileCopiesPerRun()
         );
 
         $this->ftpClose();
@@ -140,11 +141,11 @@ class FtpSync
         return $differences;
     }
 
-    protected function getLocalIndex(string $directory, array $config): array
+    protected function getLocalIndex(string $directory): array
     {
         $fileList = $this->
             getFile()->
-            glob($directory . '/' . $this->getLocalFileFilter($config));
+            glob($directory . '/' . $this->getLocalFileFilter());
         $localIndex = [];
 
         // Loop through files and get leaf-names and file sizes
@@ -153,17 +154,16 @@ class FtpSync
         }
 
         $this->informationalOut(
-            $config,
             sprintf('Found %d items in local directory', count($localIndex))
         );
 
         return $localIndex;
     }
 
-    protected function getRemoteIndex(string $directory, array $config): array
+    protected function getRemoteIndex(string $directory): array
     {
         $fileList = $this->getFtp()->mlsd($directory);
-        $filter = $this->getRemoteFileFilter($config);
+        $filter = $this->getRemoteFileFilter();
 
         // Loop through files and get leaf-names and file sizes
         $remoteIndex = [];
@@ -186,38 +186,36 @@ class FtpSync
         }
 
         $this->informationalOut(
-            $config,
             sprintf('Found %d items in remote directory', count($remoteIndex))
         );
 
         return $remoteIndex;
     }
 
-    protected function makeConnection(array $config): void
+    protected function makeConnection(): void
     {
         $ok = $this->getFtp()->connect(
-            $this->getFtpHostName($config),
-            $this->getFtpPort($config),
-            $this->getFtpTimeout($config)
+            $this->getFtpHostName(),
+            $this->getFtpPort(),
+            $this->getFtpTimeout()
         );
         if (!$ok) {
             $this->errorAndExit('Could not connect to FTP server');
         }
 
-        $ok = $this->getFtp()->login($this->getFtpUserName($config), $this->getFtpPassword($config));
+        $ok = $this->getFtp()->login($this->getFtpUserName(), $this->getFtpPassword());
         if (!$ok) {
             $this->errorAndExit('Could not authenticate to FTP server');
         }
 
         $this->informationalOut(
-            $config,
-            sprintf('Connected to host `%s`', $this->getFtpHostName($config))
+            sprintf('Connected to host `%s`', $this->getFtpHostName())
         );
     }
 
-    protected function setFtpOptions(array $config): void
+    protected function setFtpOptions(): void
     {
-        if (!$this->getPassive($config)) {
+        if (!$this->getPassive()) {
             return;
         }
 
@@ -226,10 +224,7 @@ class FtpSync
             $this->errorAndExit('Could not switch to passive mode');
         }
 
-        $this->informationalOut(
-            $config,
-            'Switched to PASV mode on host'
-        );
+        $this->informationalOut('Switched to PASV mode on host');
     }
 
     protected function ftpClose(): void
@@ -264,24 +259,25 @@ class FtpSync
         return isset($this->options['web']) && $this->options['web'];
     }
 
-    protected function getFtpHostName(array $config): string
+    protected function getFtpHostName(): string
     {
-        return $this->getConfigKey($config, 'hostname');
+        return $this->getConfigKey('hostname');
     }
 
-    protected function getFtpUserName(array $config): string
+    protected function getFtpUserName(): string
     {
-        return $this->getConfigKey($config, 'username');
+        return $this->getConfigKey('username');
     }
 
-    protected function getFtpPassword(array $config): string
+    protected function getFtpPassword(): string
     {
-        return $this->getConfigKey($config, 'password');
+        return $this->getConfigKey('password');
     }
 
-    protected function getFtpPort(array $config): int
+    protected function getFtpPort(): int
     {
         $port = 21;
+        $config = $this->getConfig();
         if (isset($config['port'])) {
             $port = (int) $config['port'];
         }
@@ -289,9 +285,10 @@ class FtpSync
         return $port;
     }
 
-    protected function getFtpTimeout(array $config): int
+    protected function getFtpTimeout(): int
     {
         $timeout = 20;
+        $config = $this->getConfig();
         if (isset($config['timeout']) && $config['timeout']) {
             $timeout = (int) $config['timeout'];
         }
@@ -299,9 +296,10 @@ class FtpSync
         return $timeout;
     }
 
-    protected function getPassive(array $config): bool
+    protected function getPassive(): bool
     {
         $pasv = true; // Default
+        $config = $this->getConfig();
         if (isset($config['pasv']) && $config['pasv'] === false) {
             $pasv = false;
         }
@@ -309,9 +307,10 @@ class FtpSync
         return $pasv;
     }
 
-    protected function getLocalFileFilter(array $config): string
+    protected function getLocalFileFilter(): string
     {
         $filter = '*';
+        $config = $this->getConfig();
         if (isset($config['local_file_filter']) && $config['local_file_filter']) {
             $filter = $config['local_file_filter'];
         }
@@ -319,9 +318,10 @@ class FtpSync
         return $filter;
     }
 
-    protected function getRemoteFileFilter(array $config): string
+    protected function getRemoteFileFilter(): string
     {
         $filter = '';
+        $config = $this->getConfig();
         if (isset($config['remote_file_filter']) && $config['remote_file_filter']) {
             $filter = $config['remote_file_filter'];
         }
@@ -329,9 +329,10 @@ class FtpSync
         return $filter;
     }
 
-    protected function getFileCopiesPerRun(array $config): int
+    protected function getFileCopiesPerRun(): int
     {
         $copies = 10;
+        $config = $this->getConfig();
         if (isset($config['file_copies_per_run']) && $config['file_copies_per_run']) {
             $copies = $config['file_copies_per_run'];
         }
@@ -339,9 +340,10 @@ class FtpSync
         return $copies;
     }
 
-    protected function getLocalLogPath(array $config): string
+    protected function getLocalLogPath(): string
     {
         $path = '';
+        $config = $this->getConfig();
         if (isset($config['log_path']) && $config['log_path']) {
             $path = $config['log_path'];
         }
@@ -349,18 +351,19 @@ class FtpSync
         return $path;
     }
 
-    protected function getLocalDirectory(array $config): string
+    protected function getLocalDirectory(): string
     {
-        return $this->getConfigKey($config, 'local_directory');
+        return $this->getConfigKey('local_directory');
     }
 
-    protected function getRemoteDirectory(array $config): string
+    protected function getRemoteDirectory(): string
     {
-        return $this->getConfigKey($config, 'remote_directory');
+        return $this->getConfigKey('remote_directory');
     }
 
-    protected function getConfigKey(array $config, string $key)
+    protected function getConfigKey(string $key)
     {
+        $config = $this->getConfig();
         if (!isset($config[$key])) {
             $this->errorAndExit("Cannot find config key `$key`");
         }
@@ -371,7 +374,7 @@ class FtpSync
     /**
      * The config file is a PHP script that returns an associative array
      */
-    protected function getConfig(string $configPath): array
+    protected function requireConfig(string $configPath): array
     {
         if (!$this->getFile()->fileExists($configPath)) {
             $this->errorAndExit('Cannot find config file');
@@ -422,14 +425,19 @@ class FtpSync
         return $this->ftp;
     }
 
+    protected function getConfig(): array
+    {
+        return $this->config;
+    }
+
     /**
      * Reports progress and useful info if the verbose option is enabled
      *
      * (Maybe when we are operating in web mode, we also send this to stdout?)
      */
-    protected function informationalOut(array $config, string $message): void
+    protected function informationalOut(string $message): void
     {
-        if ($logPath = $this->getLocalLogPath($config)) {
+        if ($logPath = $this->getLocalLogPath()) {
             $this->getFile()->appendLine($logPath, $message);
         }
     }
