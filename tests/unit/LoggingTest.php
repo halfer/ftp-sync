@@ -26,6 +26,7 @@ class LoggingTest extends TestCase
         $this->expectInformationLog('Switched to PASV mode on host');
         $this->expectInformationLog('Found 2 items in local directory');
         $this->expectInformationLog('Found 3 items in remote directory');
+        $this->expectInformationLog('Index differences: 1 missing in local, 0 of different size');
 
         // Standard expectations
         $this->expectPhpExtensions();

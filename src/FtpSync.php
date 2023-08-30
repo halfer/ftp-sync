@@ -119,6 +119,8 @@ class FtpSync
     protected function indexDifferencer(array $remoteIndex, array $localIndex): array
     {
         $differences = [];
+        $missingInLocal = 0;
+        $sizeCount = 0;
         foreach ($remoteIndex as $name => $remoteSize) {
             $copy = false;
 
@@ -127,16 +129,26 @@ class FtpSync
                 if ($localIndex[$name] !== $remoteSize) {
                     // Copy if the file sizes are different
                     $copy = true;
+                    $sizeCount++;
                 }
             } else {
                 // Copy if we don't have the file in local at all
                 $copy = true;
+                $missingInLocal++;
             }
 
             if ($copy) {
                 $differences[] = $name;
             }
         }
+
+        $this->informationalOut(
+            sprintf(
+                'Index differences: %d missing in local, %d of different size',
+                $missingInLocal,
+                $sizeCount
+            )
+        );
 
         return $differences;
     }
