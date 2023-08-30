@@ -108,7 +108,7 @@ Wishlist
 A few things that would be good to add:
 
 * Files are presently synced in a random order, add a switch to sync them in alphanumeric order
-* Useful verbose output (it is only noisy in error conditions presently)
+* An injectable differencing algo (to address one of the "Limitations" above)
 * A "dry run" mode on the console (there is a simple web one already)
 * Disable script action over the web by default (needs a config option to enable)
 * Local-side file deletion (for where a source file is removed)
