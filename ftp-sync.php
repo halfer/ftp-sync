@@ -34,7 +34,7 @@ $ftpSync = new FtpSync(
     new File(),
     new Ftp(),
     new Output(),
-    new FtpSync\PhpExtensions(),
+    new PhpExtensions(),
     $projectRoot,
     ['config' => 'config.php', ],
     $options
