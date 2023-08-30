@@ -152,6 +152,11 @@ class FtpSync
             $localIndex[basename($file)] = $this->getFile()->filesize($file);
         }
 
+        $this->informationalOut(
+            $config,
+            sprintf('Found %d items in local directory', count($localIndex))
+        );
+
         return $localIndex;
     }
 
@@ -180,6 +185,11 @@ class FtpSync
             $remoteIndex[$file['name']] = (int) $file['size'];
         }
 
+        $this->informationalOut(
+            $config,
+            sprintf('Found %d items in remote directory', count($remoteIndex))
+        );
+
         return $remoteIndex;
     }
 
@@ -200,6 +210,7 @@ class FtpSync
         }
 
         $this->informationalOut(
+            $config,
             sprintf('Connected to host `%s`', $this->getFtpHostName($config))
         );
     }
@@ -214,6 +225,11 @@ class FtpSync
         if (!$ok) {
             $this->errorAndExit('Could not switch to passive mode');
         }
+
+        $this->informationalOut(
+            $config,
+            'Switched to PASV mode on host'
+        );
     }
 
     protected function ftpClose(): void
@@ -246,11 +262,6 @@ class FtpSync
     protected function isWebMode(): bool
     {
         return isset($this->options['web']) && $this->options['web'];
-    }
-
-    protected function getLocalLogPath(): string
-    {
-        return isset($this->options['log_path']) && $this->options['log_path'];
     }
 
     protected function getFtpHostName(array $config): string
@@ -326,6 +337,16 @@ class FtpSync
         }
 
         return $copies;
+    }
+
+    protected function getLocalLogPath(array $config): string
+    {
+        $path = '';
+        if (isset($config['log_path']) && $config['log_path']) {
+            $path = $config['log_path'];
+        }
+
+        return $path;
     }
 
     protected function getLocalDirectory(array $config): string
@@ -406,9 +427,9 @@ class FtpSync
      *
      * (Maybe when we are operating in web mode, we also send this to stdout?)
      */
-    protected function informationalOut(string $message): void
+    protected function informationalOut(array $config, string $message): void
     {
-        if ($logPath = $this->getLocalLogPath()) {
+        if ($logPath = $this->getLocalLogPath($config)) {
             $this->getFile()->appendLine($logPath, $message);
         }
     }
