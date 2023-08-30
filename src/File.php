@@ -37,4 +37,9 @@ class File
     {
         return glob($pattern);
     }
+
+    public function appendLine(string $filename, string $line)
+    {
+        file_put_contents($filename, $line, FILE_APPEND);
+    }
 }

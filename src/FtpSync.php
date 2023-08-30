@@ -198,6 +198,10 @@ class FtpSync
         if (!$ok) {
             $this->errorAndExit('Could not authenticate to FTP server');
         }
+
+        $this->informationalOut(
+            sprintf('Connected to host `%s`', $this->getFtpHostName($config))
+        );
     }
 
     protected function setFtpOptions(array $config): void
@@ -242,6 +246,11 @@ class FtpSync
     protected function isWebMode(): bool
     {
         return isset($this->options['web']) && $this->options['web'];
+    }
+
+    protected function getLocalLogPath(): string
+    {
+        return isset($this->options['log_path']) && $this->options['log_path'];
     }
 
     protected function getFtpHostName(array $config): string
@@ -390,6 +399,18 @@ class FtpSync
     protected function getFtp(): Ftp
     {
         return $this->ftp;
+    }
+
+    /**
+     * Reports progress and useful info if the verbose option is enabled
+     *
+     * (Maybe when we are operating in web mode, we also send this to stdout?)
+     */
+    protected function informationalOut(string $message): void
+    {
+        if ($logPath = $this->getLocalLogPath()) {
+            $this->getFile()->appendLine($logPath, $message);
+        }
     }
 
     protected function stdOut(string $message): void

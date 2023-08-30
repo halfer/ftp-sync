@@ -1,5 +1,7 @@
 <?php
 
+namespace FtpSync\Tests;
+
 use PHPUnit\Framework\TestCase;
 
 class FailureTest extends TestCase
