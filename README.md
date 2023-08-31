@@ -110,6 +110,7 @@ Wishlist
 A few things that would be good to add:
 
 * Files are presently synced in a random order, add a switch to sync them in alphanumeric order
+* Web-based health-check (easier to use than looking at logs)
 * An injectable differencing algo (to address one of the "Limitations" above)
 * A "dry run" mode on the console (there is a simple web one already)
 * Disable script action over the web by default (needs a config option to enable)
