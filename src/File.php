@@ -46,7 +46,7 @@ class File
      */
     public function appendLine(string $filename, string $line, bool $addTimestamp = true): void
     {
-        $timestamp = $addTimestamp ? '[' . date('c') . ']' : '';
+        $timestamp = $addTimestamp ? '[' . date('c') . '] ' : '';
         file_put_contents($filename, "{$timestamp}{$line}\n", FILE_APPEND);
     }
 }
