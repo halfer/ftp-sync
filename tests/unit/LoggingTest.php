@@ -27,6 +27,7 @@ class LoggingTest extends TestCase
         $this->expectInformationLog('Found 2 items in local directory');
         $this->expectInformationLog('Found 3 items in remote directory');
         $this->expectInformationLog('Index differences: 1 missing in local, 0 of different size');
+        $this->expectLogToBeWriteable('/local_log_dir/log.log');
 
         // Standard expectations
         $this->expectPhpExtensions();
@@ -49,6 +50,8 @@ class LoggingTest extends TestCase
         $this->assertTrue(true);
     }
 
+    // @todo The expectations below could be moved to the mock trait
+
     protected function expectInformationLog(string $message)
     {
         $this->
@@ -56,5 +59,15 @@ class LoggingTest extends TestCase
             shouldReceive('appendLine')->
             once()->
             with('/local_log_dir/log.log', $message);
+    }
+
+    protected function expectLogToBeWriteable(string $logPath)
+    {
+        $this->
+            getMockFile()->
+            shouldReceive('isWriteable')->
+            once()->
+            with($logPath)->
+            andReturn(true);
     }
 }

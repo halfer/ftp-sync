@@ -36,6 +36,11 @@ class FailureTest extends TestCase
         $this->markTestIncomplete();
     }
 
+    public function testLogFileIsNotWriteable()
+    {
+        $this->markTestIncomplete();
+    }
+
     public function testMissingRequiredConfigKey()
     {
         $this->markTestIncomplete();

@@ -44,6 +44,9 @@ class FtpSync
         $this->ensureLocalTargetDirectoryExists($localDirectory);
         $this->ensureLocalTargetDirectoryIsWriteable($localDirectory);
 
+        // Ensure we can write to the log file (if it is enabled)
+        $this->ensureLogFileIsWriteable();
+
         // Connect to the FTP server
         $this->makeConnection();
         $this->setFtpOptions();
@@ -258,6 +261,15 @@ class FtpSync
         if (!$this->getFile()->isDir($directory))
         {
             $this->errorAndExit('The local sync folder cannot be found');
+        }
+    }
+
+    protected function ensureLogFileIsWriteable(): void
+    {
+        if ($logPath = $this->getLocalLogPath()) {
+            if (!$this->getFile()->isWriteable($logPath)) {
+                $this->errorAndExit('Cannot write to the log file');
+            }
         }
     }
 
