@@ -38,8 +38,15 @@ class File
         return glob($pattern);
     }
 
-    public function appendLine(string $filename, string $line)
+    /**
+     * Adds a line to the end of a file (useful for log files)
+     *
+     * Note: the date() call could be mocked, but for such a simple call, it's hardly
+     * worth it. Maybe one for later.
+     */
+    public function appendLine(string $filename, string $line, bool $addTimestamp = true): void
     {
-        file_put_contents($filename, $line, FILE_APPEND);
+        $timestamp = $addTimestamp ? '[' . date('c') . ']' : '';
+        file_put_contents($filename, "{$timestamp}{$line}\n", FILE_APPEND);
     }
 }
